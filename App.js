@@ -1,10 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Button, FlatList } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Pressable} from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, push, ref, remove, onValue } from 'firebase/database';
 import {API_KEY}from '@env';
-
+import { Input, Header, Button, ListItem } from'react-native-elements';
+import { Ionicons } from "@expo/vector-icons";
 
 export default function App() {
   const firebaseConfig = {
@@ -28,6 +29,8 @@ export default function App() {
     push(
       ref(database, 'items/'),
       { 'product': product, 'amount': amount })
+      setAmount();
+      setProduct();
   }
 
   useEffect(() => {
@@ -50,40 +53,57 @@ export default function App() {
     remove(ref(database, 'items/' + key));
   }
 
-  return (
+  const renderItem = ({ item }) => (
+    <ListItem bottomDivider>
+      <ListItem.Content>
+        <ListItem.Title>{item.product}</ListItem.Title>
+        <ListItem.Subtitle>{item.amount}</ListItem.Subtitle>
+        
+      </ListItem.Content>
+      <Pressable onPress={()=>deleteItem(item.key)}>
+        <Ionicons name="trash" size={30} color="red" />
+      </Pressable>
+    </ListItem>
+  );
+
+  return (   
     <View style={styles.container}>
-      <TextInput
+      <Header 
+        centerComponent={{ text: 'SHOPPING LIST', style: { color: '#fff' } }}
+      />
+      
+      <Input
         style={styles.input}
         placeholder='Product'
+        label='PRODUCT'
         onChangeText={product => setProduct(product)}
         value={product}
       />
-      <TextInput
-        style={{
-          marginTop: 10,
-          marginBottom: 10,
-          width: 180,
-          fontSize: 18,
-          borderColor: 'gray',
-          borderWidth: 1
-        }}
+
+      <Input
+        style={styles.input}
         placeholder='Amount'
+        label='AMOUNT'
         keyboardType='numeric'
         onChangeText={amount => setAmount(amount)}
         value={amount}
-
       />
-      <Button title="SAVE" onPress={saveItem} />
+      
+      <View style={styles.center}>   
+      <TouchableOpacity activeOpacity={0.95} style={{ width: 200}}>
+        <Button
+          icon={{ name: 'save', color: '#fff'}}
+          title="SAVE"
+          onPress={saveItem}
+        />
+      </TouchableOpacity>   
       <Text style={styles.text}>Shopping list:</Text>
+      </View> 
+
       <FlatList
-        style={{ marginLeft: "5%" }}
-        keyExtractor={(item) => item.key.toString()}
-        renderItem={({ item }) =>
-          <View style={styles.list}>
-            <Text style={{ fontSize: 18 }}>{item.product}, {item.amount} </Text>
-            <Text style={{ fontSize: 18, color: '#0000ff' }} onPress={() => deleteItem(item.key)}>delete</Text>
-          </View>}
         data={items}
+        keyExtractor={(item) => item.key.toString()}
+        renderItem={renderItem}
       />
       <StatusBar style="auto" />
     </View>
@@ -94,23 +114,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
+    //alignItems: 'center',
     justifyContent: 'center',
   },
   input: {
-    marginTop: 80,
     width: 180,
     fontSize: 18,
-    borderColor: 'gray',
-    borderWidth: 1
   },
   text: {
     marginTop: 10,
     fontSize: 22,
     marginBottom: 15,
   },
-  list: {
-    flexDirection: 'row',
+  center: {
     alignItems: 'center'
   }
 });
